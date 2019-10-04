@@ -11,7 +11,7 @@ CXXFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
 LDFLAGS = -lreadline
 
 BIN = myshell
-OBJS = main.o
+OBJS = io.o main.o
 
 all: $(BIN) etags
 
