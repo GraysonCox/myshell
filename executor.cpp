@@ -51,18 +51,18 @@ void execute_cmd(command_t cmd) {
   }
 }
 
-void execute_pipeline(instruction_t cmds) {
+void execute_pipeline(instruction_t instr) {
   int fd[2];
   pid_t pid;
   int fdd = 0;
-  for (instruction_t::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
+  for (instruction_t::iterator cmd_it = instr.begin(); cmd_it != instr.end(); cmd_it++) {
     pipe(fd); // TODO: Use pipes only if needed.
     if ((pid = fork()) < 0) {
       perror("Failed to create child process.");
       exit(1);
     } else if (pid == 0) {
       dup2(fdd, 0);
-      if (cmd_it + 1 != cmds.end()) {
+      if (cmd_it + 1 != instr.end()) {
 	dup2(fd[1], 1);
       }
       close(fd[0]);
