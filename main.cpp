@@ -1,4 +1,6 @@
 #include"io.h"
+#include"model.h"
+#include"decoder.h"
 
 #include<iostream>
 #include<string>
@@ -8,37 +10,24 @@
 using namespace io;
 using namespace std;
 
-#define SYMBOL_ARG_DELIMITER                    " "
-#define SYMBOL_LINE_DELIMITER                   ";"
-#define SYMBOL_PIPE                             "|"
-#define SYMBOL_BACKGROUND                       "&"
-#define SYMBOL_OUT_REDIRECT_TRUNCATE            ">"
-#define SYMBOL_OUT_REDIRECT_APPEND              ">>"
+static const string special_commands[] = {
+  "cd",
+  "help",
+  "clr",
+  "environ",
+  "time",
+  "dir",
+  "quit"
+};
 
-vector<vector<string> > parse_cmds(string input) {
-  vector<vector<string> > cmds;
-  char *input_str = new char[input.length() - 1];
-  strcpy(input_str, input.c_str());
-  char *cmd_str, *arg_str;
-  while ((cmd_str = strsep(&input_str, SYMBOL_PIPE)) != NULL) {
-    if (strlen(cmd_str) == 0) {
-      continue;
-    }
-    vector<string> cmd;
-    while ((arg_str = strsep(&cmd_str, SYMBOL_ARG_DELIMITER)) != NULL) {
-      if (strlen(arg_str) != 0) {
-	cmd.push_back(arg_str);
-      }
-    }
-    if (cmd.size() != 0) {
-      cmds.push_back(cmd);
-    }
+// NOTE: Wrapper for execlp. Does not create new process.
+int exec(command_t cmd) {
+  string cmd_name = cmd[0];
+  
+  if (cmd_name == "cd") {
+    return chdir(cmd[1].c_str());
   }
-  return cmds;
-}
 
-// NOTE: Does not create new process
-int exec(vector<string> cmd) {
   char *args[cmd.size() + 1];
   args[cmd.size()] = NULL;
   for (int i = 0; i < cmd.size(); i++) {
@@ -48,7 +37,7 @@ int exec(vector<string> cmd) {
   return execvp(args[0], args);
 }
 
-void execute_cmd(vector<string> cmd) {
+void execute_cmd(command_t cmd) {
   pid_t pid = fork();
   if (pid < 0) {
     perror("Failed to create child process.");
@@ -63,12 +52,12 @@ void execute_cmd(vector<string> cmd) {
   }
 }
 
-void execute_pipeline(vector<vector<string> > cmds) {
+void execute_pipeline(instruction_t cmds) {
   int fd[2];
   pid_t pid;
   int fdd = 0;
-  for (vector<vector<string> >::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
-    pipe(fd);
+  for (instruction_t::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
+    pipe(fd); // TODO: Use pipes only if needed.
     if ((pid = fork()) < 0) {
       perror("Failed to create child process.");
       exit(1);
@@ -80,19 +69,18 @@ void execute_pipeline(vector<vector<string> > cmds) {
       close(fd[0]);
       exec(*cmd_it);
       exit(1);
-    } else {
-      wait(NULL);
-      close(fd[1]);
-      fdd = fd[0];
     }
+    wait(NULL);
+    close(fd[1]);
+    fdd = fd[0];
   }
 }
 
-void execute(vector<vector<string> > cmds) {
-  if (cmds.size() > 1) {
-    execute_pipeline(cmds);
+void execute(instruction_t instr) {
+  if (instr.size() > 1) {
+    execute_pipeline(instr);
   } else {
-    execute_cmd(cmds[0]);
+    execute_cmd(instr.at(0));
   }
 }
 
@@ -110,19 +98,18 @@ void print_cmds(vector<vector<string> > cmds) {
 int main(int argc, char *argv[]) {
 
   string input;
-  vector<vector<string> > cmds;
+  vector<instruction_t> instrs;
 
   while (1) {
     input = get_input();
 
     add_to_history(input);
 
-    cmds = parse_cmds(input);
+    instrs = decode(input);
 
-    //print_cmds(cmds);
-    execute_pipeline(cmds);
-    
-    // TODO: Re-implement the semi-colon shit
+    for (vector<instruction_t>::iterator instr_it = instrs.begin(); instr_it != instrs.end(); instr_it++) {
+      execute(*instr_it);
+    }
   }
 
   return 0;
