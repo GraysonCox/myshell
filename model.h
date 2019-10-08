@@ -16,7 +16,13 @@ class command_t {
 
   command_t(std::vector<std::string> args);
 
-  int exec();
+  int exec(int pipe[2], int input_fd, int output_fd);
+
+ private:
+
+  int exec_built_in_cmd();
+
+  int exec_special_cmd();
 
 };
 
