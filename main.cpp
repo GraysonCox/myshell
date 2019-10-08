@@ -1,7 +1,6 @@
 #include"io.h"
 #include"model.h"
 #include"decoder.h"
-#include"executor.h"
 
 #include<iostream>
 #include<string>
@@ -12,17 +11,19 @@ using namespace std;
 int main(int argc, char *argv[]) {
 
   string input;
-  vector<instruction_t> instrs;
+  vector<instruction_t> instructions;
 
   while (1) {
     input = get_input();
 
+    //cout << "Input: " << input << endl;
+
     add_to_history(input);
 
-    instrs = decode(input);
+    instructions = decode(input);
 
-    for (vector<instruction_t>::iterator instr_it = instrs.begin(); instr_it != instrs.end(); instr_it++) {
-      execute(*instr_it);
+    for (instruction_t instr : instructions) {
+      instr.exec();
     }
   }
 

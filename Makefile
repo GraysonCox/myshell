@@ -6,12 +6,12 @@ RM = rm -f
 TERM = "\"S2019\""
 
 CFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
-CXXFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
+CXXFLAGS = -std=c++11 -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
 
 LDFLAGS = -lreadline
 
 BIN = myshell
-OBJS = io.o model.o decoder.o executor.o main.o
+OBJS = io.o model.o decoder.o main.o
 
 all: $(BIN) etags
 

@@ -5,6 +5,8 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 
+const std::string PROMPT_TEXT = "$ ";
+
 std::string get_input() {
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
