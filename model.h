@@ -3,9 +3,6 @@
 #include<vector>
 #include<string>
 
-//typedef std::vector<std::string> command_t; // A single command to be executed by 'exec'
-//typedef std::vector<command_t> instruction_t; // A pipeline of commands
-
 class command_t {
 
  public:
@@ -36,15 +33,15 @@ class instruction_t {
 
  public:
 
-  std::vector<command_t> cmds; // TODO: Make this private.
+  std::vector<command_t> cmds;
 
-  bool is_foreground;
+  bool is_foreground = true;
+
+  std::string input_file;
 
   std::string output_file;
 
-  write_mode_t write_mode;
-
-  instruction_t(std::vector<command_t> cmds, bool is_foreground = true, std::string output_file = "", write_mode_t write_mode = WRITE_MODE_NONE);
+  write_mode_t write_mode = WRITE_MODE_NONE;
 
   int exec();
 

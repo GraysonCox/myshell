@@ -66,12 +66,9 @@ int command_t::exec(int pipe[2], int input_fd, int output_fd) {
 
 // - instruction_t
 
-instruction_t::instruction_t(vector<command_t> cmds, bool is_foreground, string output_file, write_mode_t write_mode) {
+/*instruction_t::instruction_t(vector<command_t> cmds) {
   this->cmds = cmds;
-  this->is_foreground = is_foreground;
-  this->output_file = output_file;
-  this->write_mode = write_mode;
-}
+  }*/
 
 int instruction_t::execute_instruction_no_pipes() {
   cmds.front().exec(NULL, 0, 1);

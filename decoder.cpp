@@ -26,34 +26,8 @@ vector<string> separate(string str, string delimiter) {
   return substrings;
 }
 
-// TODO: Decode output redirection here and open files and shit
-/*
-vector<instruction_t> decode(string input) {
-  vector<instruction_t> instrs;
-  bool is_foreground = true;
-  vector<command_t> cmds;
-  command_t *cmd;
-  vector<string> instruction_strings, command_strings;
-  instruction_strings = separate(input, SYMBOL_INSTRUCTION_DELIMITER);
-  for (vector<string>::iterator instr_it = instruction_strings.begin(); instr_it != instruction_strings.end(); instr_it++) {
-    command_strings = separate(*instr_it, SYMBOL_PIPE);
-    for (vector<string>::iterator cmd_it = command_strings.begin(); cmd_it != command_strings.end(); cmd_it++) {
-      cmd = new command_t(separate(*cmd_it, SYMBOL_ARG_DELIMITER));
-      if (cmd->args.back() == "&") {
-	cmd->args.pop_back();
-	is_foreground = false;
-      }
-      cmds.push_back(*cmd);
-    }
-    instrs.push_back(instruction_t(cmds, is_foreground));
-    is_foreground = true;
-  }
-  return instrs;
-}*/
-
 instruction_t decode_instruction(string input) {
-  bool is_foreground = true;
-  write_mode_t write_mode = WRITE_MODE_NONE;
+  instruction_t instruction;
   string output_file;
   vector<command_t> cmds;
   vector<string> args;
@@ -62,27 +36,26 @@ instruction_t decode_instruction(string input) {
     args = separate(cmd_str, SYMBOL_ARG_DELIMITER);
     if (args.back() == SYMBOL_BACKGROUND) {
       args.pop_back();
-      is_foreground = false;
+      instruction.is_foreground = false;
     }
     if (args.size() >= 3) {
       string write_symbol = args.at(args.size() - 2);
       if (write_symbol == SYMBOL_OUT_REDIRECT_TRUNCATE) {
-	write_mode = WRITE_MODE_TRUNCATE;
-	output_file = args.back();
+	instruction.write_mode = WRITE_MODE_TRUNCATE;
+	instruction.output_file = args.back();
 	args.pop_back();
 	args.pop_back();
       } else if (write_symbol == SYMBOL_OUT_REDIRECT_APPEND) {
-	write_mode = WRITE_MODE_APPEND;
-	output_file = args.back();
+	instruction.write_mode = WRITE_MODE_APPEND;
+	instruction.output_file = args.back();
 	args.pop_back();
 	args.pop_back();
-      } else {
-	output_file = "";
       }
     }
     cmds.push_back(command_t(args));
   }
-  return instruction_t(cmds, is_foreground, output_file, write_mode);
+  instruction.cmds = cmds;
+  return instruction;
 }
 
 vector<instruction_t> decode(string input) {
