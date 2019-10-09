@@ -22,14 +22,25 @@ command_t::command_t(vector<string> args) {
   }
 }
 
-int command_t::exec_built_in_cmd() {
-  char *arg_array[args.size() + 1];
-  arg_array[args.size()] = NULL;
-  for (int i = 0; i < args.size(); i++) {
-    arg_array[i] = new char[args.at(i).length() + 1];
-    strcpy(arg_array[i], args.at(i).c_str());
+int command_t::exec_built_in_cmd(int input_fd, int output_fd) {
+  pid_t pid;
+  if ((pid = fork()) < 0) {
+    cerr << "Bad fork" << endl;
+    return -1;
+  } else if (pid > 0) {
+    return waitpid(pid, NULL, 0);
+  } else {
+    dup2(input_fd, 0);
+    dup2(output_fd, 1);
+    char *arg_array[args.size() + 1]; // TODO: Make separate method for making this array.
+    arg_array[args.size()] = NULL;
+    for (int i = 0; i < args.size(); i++) {
+      arg_array[i] = new char[args.at(i).length() + 1];
+      strcpy(arg_array[i], args.at(i).c_str());
+    }
+    execvp(arg_array[0], arg_array);
+    exit(-1);
   }
-  return execvp(arg_array[0], arg_array);
 }
 
 int command_t::exec_special_cmd() {
@@ -44,23 +55,11 @@ int command_t::exec_special_cmd() {
   return 0;
 }
 
-int command_t::exec(int pipe[2], int input_fd, int output_fd) {
-  if (!is_built_in) {
-    return exec_special_cmd();
+int command_t::exec(int input_fd, int output_fd) {
+  if (is_built_in) {
+    return exec_built_in_cmd(input_fd, output_fd);
   } else {
-    pid_t pid;
-    if ((pid = fork()) < 0) {
-      cerr << "Bad fork" << endl;
-      return -1;
-    } else if (pid > 0) {
-      waitpid(pid, NULL, 0);
-      return 0;
-    } else {
-      dup2(input_fd, 0);
-      dup2(output_fd, 1);
-      //close(pipe[0]);
-      return exec_built_in_cmd();
-    }
+    return exec_special_cmd();
   }
 }
 
@@ -71,20 +70,18 @@ int command_t::exec(int pipe[2], int input_fd, int output_fd) {
   }*/
 
 int instruction_t::execute_instruction_no_pipes() {
-  cmds.front().exec(NULL, 0, 1);
-  return 0; // TODO: Return -1 if something goes wrong. This always returns 0;
+  return cmds.front().exec(0, 1);
 }
 
 int instruction_t::execute_instruction_with_pipes() {
   int fd[2];
-  //pid_t pid;
-  int fdd = 0;
+  int fdd = 0; // TODO: Rename this.
   for (vector<command_t>::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
     pipe(fd);
     if (cmd_it + 1 != cmds.end()) {
-      cmd_it->exec(fd, fdd, fd[1]);
+      cmd_it->exec(fdd, fd[1]);
     } else {
-      cmd_it->exec(fd, fdd, 1);
+      cmd_it->exec(fdd, 1);
     }
     close(fd[1]);
     fdd = fd[0];

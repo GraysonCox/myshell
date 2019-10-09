@@ -13,7 +13,6 @@ void do_command_line() {
   vector<instruction_t> instructions;
   while (1) {
     input = get_input();
-    add_to_history(input);
     instructions = decode(input);
     for (instruction_t instr : instructions) {
       instr.exec();
