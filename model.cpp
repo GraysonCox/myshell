@@ -1,10 +1,12 @@
-#import"model.h"
+#include"model.h"
 
-#import<unistd.h>
-#import<stdlib.h>
-#import<fcntl.h>
+#include<unistd.h>
+#include<stdlib.h>
+#include<fcntl.h>
+#include<sys/wait.h>
+#include<cstring>
 
-#import<iostream> // TODO: Remove when done debugging
+#include<iostream> // TODO: Remove when done debugging
 
 using namespace std;
 
@@ -34,7 +36,7 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd) {
     dup2(output_fd, 1);
     char *arg_array[args.size() + 1]; // TODO: Make separate method for making this array.
     arg_array[args.size()] = NULL;
-    for (int i = 0; i < args.size(); i++) {
+    for (size_t i = 0; i < args.size(); i++) {
       arg_array[i] = new char[args.at(i).length() + 1];
       strcpy(arg_array[i], args.at(i).c_str());
     }
@@ -132,7 +134,7 @@ int instruction_t::exec() {
     close(save_out);
   }
   if (pid == 0) {
-    exit(0);
+    exit(error_code);
   } else {
     return 0;
   }

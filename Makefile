@@ -8,8 +8,6 @@ TERM = "\"S2019\""
 CFLAGS = -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
 CXXFLAGS = -std=c++11 -Wall -Werror -ggdb3 -funroll-loops -DTERM=$(TERM)
 
-LDFLAGS =
-
 BIN = myshell
 OBJS = io.o model.o decoder.o main.o
 
