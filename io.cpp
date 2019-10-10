@@ -18,10 +18,6 @@ string get_input() {
   return input;
 }
 
-void add_to_history(string s) {
-  //add_history(s.c_str());
-}
-
 batch_file::batch_file(string file) {
   instream.open(file);
 }

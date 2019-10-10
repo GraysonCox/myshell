@@ -6,8 +6,6 @@
 #include<sys/wait.h>
 #include<cstring>
 
-#include<iostream> // TODO: Remove when done debugging
-
 using namespace std;
 
 // - command_t
@@ -19,7 +17,6 @@ command_t::command_t(vector<string> args) {
       cmd_name == "cd"
       || cmd_name == "help"
       || cmd_name == "quit"
-      //      || cmd_name == "echo"
   ) {
     this->is_built_in = false;
   } else if (cmd_name == "environ") {
@@ -34,16 +31,17 @@ command_t::command_t(vector<string> args) {
   }
 }
 
-int command_t::exec_built_in_cmd(int input_fd, int output_fd) {
+int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
   pid_t pid;
   if ((pid = fork()) < 0) {
-    cerr << "Bad fork" << endl;
+    perror("Bad fork");
     return -1;
   } else if (pid > 0) {
     return waitpid(pid, NULL, 0);
   } else {
     dup2(input_fd, 0);
     dup2(output_fd, 1);
+    dup2(error_fd, 2);
     char *arg_array[args.size() + 1]; // TODO: Make separate method for making this array.
     arg_array[args.size()] = NULL;
     for (size_t i = 0; i < args.size(); i++) {
@@ -51,6 +49,7 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd) {
       strcpy(arg_array[i], args.at(i).c_str());
     }
     execvp(arg_array[0], arg_array);
+    perror(arg_array[0]);
     exit(-1);
   }
 }
@@ -70,18 +69,13 @@ int command_t::exec_special_cmd() {
     exit(0);
   } else if (cmd_name == "pause") {
 
-  } /*else if (cmd_name == "echo") {
-    for (auto str = args.begin() + 1; str != args.end(); str++) {
-      cout << *str << ' ';
-    }
-    cout << endl;
-    }*/
+  }
   return 0;
 }
 
-int command_t::exec(int input_fd, int output_fd) {
+int command_t::exec(int input_fd, int output_fd, int error_fd) {
   if (is_built_in) {
-    return exec_built_in_cmd(input_fd, output_fd);
+    return exec_built_in_cmd(input_fd, output_fd, error_fd);
   } else {
     return exec_special_cmd();
   }
@@ -89,12 +83,8 @@ int command_t::exec(int input_fd, int output_fd) {
 
 // - instruction_t
 
-/*instruction_t::instruction_t(vector<command_t> cmds) {
-  this->cmds = cmds;
-  }*/
-
 int instruction_t::execute_instruction_no_pipes() {
-  return cmds.front().exec(0, 1);
+  return cmds.front().exec(0, 1, 2);
 }
 
 int instruction_t::execute_instruction_with_pipes() {
@@ -103,9 +93,9 @@ int instruction_t::execute_instruction_with_pipes() {
   for (vector<command_t>::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
     pipe(fd);
     if (cmd_it + 1 != cmds.end()) {
-      cmd_it->exec(fdd, fd[1]);
+      cmd_it->exec(fdd, fd[1], fileno(stderr));
     } else {
-      cmd_it->exec(fdd, 1);
+      cmd_it->exec(fdd, 1, fileno(stderr));
     }
     close(fd[1]);
     fdd = fd[0];
@@ -118,7 +108,7 @@ int instruction_t::exec() {
   pid_t pid = -1;
   if (!is_foreground) {
     if ((pid = fork()) < 0) {
-      cerr << "Bad fork" << endl;
+      perror("Bad fork");
       return -1;
     } else if (pid > 0) {
       return 0;

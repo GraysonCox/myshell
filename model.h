@@ -31,12 +31,12 @@ class command_t {
   //
   // @Return 0 if the command executed successfully.
   //
-  int exec(int input_fd, int output_fd);
+  int exec(int input_fd, int output_fd, int error_fd);
 
  private:
 
   // TODO: Comments
-  int exec_built_in_cmd(int input_fd, int output_fd);
+  int exec_built_in_cmd(int input_fd, int output_fd, int error_fd);
 
   int exec_special_cmd();
 

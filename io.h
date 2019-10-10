@@ -4,19 +4,10 @@
 
 //
 // Displays command prompt line containing current directory and waits
-// for user to press 'return'. Also allows user to cycle through the 
-// command history with the arrow keys.
+// for user to press 'return'.
 // @Return - the string entered by the user
 //
 std::string get_input();
-
-//
-// Adds the given string to the command history, which can be accessed
-// with the arrow keys next time get_input() is called;
-// @Param - s: the string to be saved in history
-//
-//void add_to_history(std::string s);
-
 
 //
 // A wrapper class for opening and iterating through the lines of an ASCII file
