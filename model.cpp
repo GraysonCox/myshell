@@ -19,6 +19,15 @@ command_t::command_t(vector<string> args) {
       || cmd_name == "quit"
   ) {
     this->is_built_in = false;
+  } else if (cmd_name == "environ") {
+    this->args.erase(this->args.begin());
+    this->args.emplace(this->args.begin(), "env");
+  } else if (cmd_name == "clr") {
+    this->args.erase(this->args.begin());
+    this->args.emplace(this->args.begin(), "clear");
+  } else if (cmd_name == "dir") {
+    this->args.erase(this->args.begin());
+    this->args.emplace(this->args.begin(), "ls");
   }
 }
 
@@ -46,11 +55,18 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd) {
 int command_t::exec_special_cmd() {
   string cmd_name = args.at(0);
   if (cmd_name == "cd") {
-    return chdir(args.at(1).c_str());
+    if (args.size() > 1) {
+      return chdir(args.at(1).c_str());
+    } else {
+      system("pwd");
+      return 0;
+    }
   } else if (cmd_name == "help") {
     system("help | more");
   } else if (cmd_name == "quit") {
     exit(0);
+  } else if (cmd_name == "pause") {
+
   }
   return 0;
 }
