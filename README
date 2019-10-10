@@ -1,0 +1,14 @@
+To compile and run:
+   1. Type 'make' in the project directory to compile.
+   2. Type './myshell' to run.
+
+TODO:
+	- Pause command
+	- The  shell  environment  should  containshell  =  <pathname>  /myshell 
+	  where <pathname>/myshell  is  the  full  path  for  the  shell  executable 
+	  (not  a  hardwired path back to your directory, but the one from which it 
+	  was executed).
+	- Built-in commands should be executed with an environment that contains the 
+	  entry: parent = <pathname>/myshell where <pathname>/myshell is as described 
+	  above.
+	- Documentation/Comments
