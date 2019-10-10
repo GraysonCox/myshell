@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define SYMBOL_ARG_DELIMITER                    " "
+#define SYMBOL_ARG_DELIMITER                    " \t"
 #define SYMBOL_INSTRUCTION_DELIMITER            ";"
 #define SYMBOL_PIPE                             "|"
 #define SYMBOL_BACKGROUND                       "&"
@@ -56,26 +56,37 @@ instruction_t decode_instruction(string input) {
   string output_file;
   vector<command_t> cmds;
   vector<string> args;
+
+  
+  vector<string> sep_by_background;// Get background symbol
+  if ((sep_by_background = separate(input, SYMBOL_BACKGROUND)).back() != input) {
+    instruction.is_foreground = false;
+    input = sep_by_background.front();
+  }
+
+  //vector<string> sep_by_io_redir;// Get input/output files
+  
+
   vector<string> command_strings = separate(input, SYMBOL_PIPE);
   for (string cmd_str : command_strings) {
     args = separate(cmd_str, SYMBOL_ARG_DELIMITER);
-    if (args.back() == SYMBOL_BACKGROUND) {
-      args.pop_back();
-      instruction.is_foreground = false;
-    }
-    if (args.size() >= 3) {
+    //if (args.back() == SYMBOL_BACKGROUND) {
+    // args.pop_back();
+    // instruction.is_foreground = false;
+    //}
+    while (cmd_str == command_strings.back() && args.size() >= 3) { // Get input/output files
       string write_symbol = args.at(args.size() - 2);
       if (write_symbol == SYMBOL_OUT_REDIRECT_TRUNCATE) {
 	instruction.write_mode = WRITE_MODE_TRUNCATE;
 	instruction.output_file = args.back();
-	args.pop_back();
-	args.pop_back();
       } else if (write_symbol == SYMBOL_OUT_REDIRECT_APPEND) {
 	instruction.write_mode = WRITE_MODE_APPEND;
 	instruction.output_file = args.back();
-	args.pop_back();
-	args.pop_back();
+      } else if (write_symbol == SYMBOL_IN_REDIRECT) {
+	instruction.input_file = args.back();
       }
+      args.pop_back();
+      args.pop_back();
     }
     cmds.push_back(command_t(args));
   }

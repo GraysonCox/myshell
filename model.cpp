@@ -119,8 +119,15 @@ int instruction_t::exec() {
     }
   }
 
-  int out, save_out;
-  bool is_output_redirected = output_file.length() != 0;
+  int in, out, save_in, save_out, save_err;
+  bool is_output_redirected = !output_file.empty();
+  bool is_input_redirected = !input_file.empty();
+  if (is_input_redirected) {
+    in = open(input_file.c_str(), O_RDONLY);
+    if (in == -1) { perror("Failed to open input file"); exit(-1); }
+    save_in = dup(fileno(stdin));
+    if (dup2(in, fileno(stdin)) == -1) { perror("Failed to redirect stdin."); exit(-1); }
+  }
   if (is_output_redirected) {
     int write_code = 0;
     switch (write_mode) {
@@ -134,9 +141,11 @@ int instruction_t::exec() {
       break;
     }
     out = open(output_file.c_str(), write_code, 0600);
-    if (-1 == out) { perror("opening output file"); exit(-1); }
+    if (-1 == out) { perror("Failed to open output file."); exit(-1); }
     save_out = dup(fileno(stdout));
-    if (-1 == dup2(out, fileno(stdout))) { perror("cannot redirect stdout"); exit(-1); }
+    save_err = dup(fileno(stderr));
+    if (-1 == dup2(out, fileno(stdout))) { perror("Failed to redirect stdout."); exit(-1); }
+    if (-1 == dup2(out, fileno(stderr))) { perror("Failed to redirect stderr."); exit(-1); }
   }
   int error_code = 0;
   if (cmds.size() > 1) {
@@ -144,10 +153,20 @@ int instruction_t::exec() {
   } else {
     error_code = execute_instruction_no_pipes();
   }
+  if (is_input_redirected) {
+    fflush(stdin);
+    close(in);
+    dup2(save_in, fileno(stdin));
+    close(save_in);
+  }
   if (is_output_redirected) {
-    fflush(stdout); close(out);
+    fflush(stdout);
+    fflush(stderr);
+    close(out);
     dup2(save_out, fileno(stdout));
+    dup2(save_err, fileno(stderr));
     close(save_out);
+    close(save_err);
   }
   if (pid == 0) {
     exit(error_code);
