@@ -84,6 +84,8 @@ instruction_t decode_instruction(string input) {
 	instruction.output_file = args.back();
       } else if (write_symbol == SYMBOL_IN_REDIRECT) {
 	instruction.input_file = args.back();
+      } else {
+	break;
       }
       args.pop_back();
       args.pop_back();

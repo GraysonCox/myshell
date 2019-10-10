@@ -19,7 +19,7 @@ command_t::command_t(vector<string> args) {
       cmd_name == "cd"
       || cmd_name == "help"
       || cmd_name == "quit"
-      || cmd_name == "echo"
+      //      || cmd_name == "echo"
   ) {
     this->is_built_in = false;
   } else if (cmd_name == "environ") {
@@ -70,12 +70,12 @@ int command_t::exec_special_cmd() {
     exit(0);
   } else if (cmd_name == "pause") {
 
-  } else if (cmd_name == "echo") {
+  } /*else if (cmd_name == "echo") {
     for (auto str = args.begin() + 1; str != args.end(); str++) {
       cout << *str << ' ';
     }
     cout << endl;
-  }
+    }*/
   return 0;
 }
 
