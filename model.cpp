@@ -5,6 +5,7 @@
 #include<fcntl.h>
 #include<sys/wait.h>
 #include<cstring>
+#include<stdio.h>
 
 using namespace std;
 
@@ -49,7 +50,7 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
       strcpy(arg_array[i], args.at(i).c_str());
     }
     execvp(arg_array[0], arg_array);
-    perror(arg_array[0]);
+    fputs("Invalid instruction.\n", stderr);
     exit(-1);
   }
 }
@@ -58,7 +59,12 @@ int command_t::exec_special_cmd() {
   string cmd_name = args.at(0);
   if (cmd_name == "cd") {
     if (args.size() > 1) {
-      return chdir(args.at(1).c_str());
+      if (chdir(args.at(1).c_str()) == -1) {
+	perror(args.at(1).c_str());
+	return -1;
+      } else {
+	return 0;
+      }
     } else {
       system("pwd");
       return 0;
