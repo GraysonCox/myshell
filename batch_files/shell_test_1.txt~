@@ -1,0 +1,46 @@
+echo "date"
+date
+
+echo "cal"
+cal
+
+echo "who"
+who
+
+echo "ls"
+ls
+
+echo "ps"
+ps
+
+echo "time"
+time ls
+
+echo "cd"
+cd ..
+dir
+
+echo "dir"
+dir
+
+echo "environ"
+environ
+
+echo "help"
+help
+
+echo "pause"
+
+echo Multiple commands: date, cal, who
+date;cal;who
+
+echo "Output redirection: ls -l to output.txt"
+
+
+echo "cat output.txt"
+
+echo "Input redirection: rev from output.txt to output2.txt"
+
+echo "Single pipe: who and rev"
+
+echo "Lots of pipes: ls and rev and sort"
