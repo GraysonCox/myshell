@@ -13,8 +13,20 @@
 #include<iostream>
 #include<string>
 #include<vector>
+#include<unistd.h>
+#include<stdlib.h>
 
 using namespace std;
+
+void add_path_variable() {
+  char path_var[] = "SHELL=";
+  char cwd[1024];
+  getcwd(cwd, sizeof(cwd));
+  strcat(cwd, "/myshell");
+  strcat(path_var, cwd);
+  cout << path_var << endl;
+  putenv(path_var);
+}
 
 //
 // Continuously take user input via the keyboard, decode the input as
@@ -47,6 +59,8 @@ void do_batch_file(string file) {
 }
 
 int main(int argc, char *argv[]) {
+
+  add_path_variable();
 
   if (argc > 1) { // TODO: Better error handling
     do_batch_file(argv[1]);

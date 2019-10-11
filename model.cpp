@@ -11,6 +11,8 @@
 
 using namespace std;
 
+extern char** environ;
+
 // - command_t
 
 command_t::command_t(vector<string> args) {
@@ -21,11 +23,13 @@ command_t::command_t(vector<string> args) {
       || cmd_name == "help"
       || cmd_name == "quit"
       || cmd_name == "pause"
+      || cmd_name == "env"
   ) {
     this->is_built_in = false;
   } else if (cmd_name == "environ") {
     this->args.erase(this->args.begin());
     this->args.emplace(this->args.begin(), "env");
+    this->is_built_in = false;
   } else if (cmd_name == "clr") {
     this->args.erase(this->args.begin());
     this->args.emplace(this->args.begin(), "clear");
@@ -79,6 +83,10 @@ int command_t::exec_special_cmd() {
   } else if (cmd_name == "pause") {
     string s;
     getline(cin, s);
+  } else if (cmd_name == "env") {
+    for (size_t i = 0; environ[i] != NULL; i++) {
+      printf("%s\n", environ[i]);
+    }
   }
   return 0;
 }
