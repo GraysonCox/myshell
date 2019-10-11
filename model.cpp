@@ -6,6 +6,8 @@
 #include<sys/wait.h>
 #include<cstring>
 #include<stdio.h>
+#include<string.h>
+#include<iostream> // TODO: Delete
 
 using namespace std;
 
@@ -18,6 +20,7 @@ command_t::command_t(vector<string> args) {
       cmd_name == "cd"
       || cmd_name == "help"
       || cmd_name == "quit"
+      || cmd_name == "pause"
   ) {
     this->is_built_in = false;
   } else if (cmd_name == "environ") {
@@ -74,7 +77,8 @@ int command_t::exec_special_cmd() {
   } else if (cmd_name == "quit") {
     exit(0);
   } else if (cmd_name == "pause") {
-
+    string s;
+    getline(cin, s);
   }
   return 0;
 }

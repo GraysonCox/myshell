@@ -1,3 +1,11 @@
+/**
+
+   main.cpp
+
+   Contains main method and what not.
+
+ */
+
 #include"io.h"
 #include"model.h"
 #include"decoder.h"
@@ -8,6 +16,11 @@
 
 using namespace std;
 
+//
+// Continuously take user input via the keyboard, decode the input as
+// instruction_t's, and execute them. Exits when the model.h module
+// exits.
+//
 void do_command_line() {
   string input;
   vector<instruction_t> instructions;

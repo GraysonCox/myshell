@@ -3,7 +3,6 @@ To compile and run:
    2. Type './myshell' to run.
 
 TODO:
-	- Pause command
 	- The  shell  environment  should  containshell  =  <pathname>  /myshell 
 	  where <pathname>/myshell  is  the  full  path  for  the  shell  executable 
 	  (not  a  hardwired path back to your directory, but the one from which it 

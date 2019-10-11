@@ -1,5 +1,13 @@
-#pragma once
+/**
 
+   decoder.h
+
+   This module handles the decoding of strings and creation of instruction_t and
+   command_t objects.
+
+ */
+
+#pragma once
 #include"model.h"
 
 #include<vector>
@@ -8,7 +16,9 @@
 //
 // Parses instructions separated by semi-colons (';') in the given string.
 // If there are no semi-colons, the vector will contain just one instruction.
+//
 // @Param - input: the raw text containing command args separated by spaces (' ').
+//
 // @Return - A vector containing the instructions parsed from the string.
 //
 std::vector<instruction_t> decode(std::string input);

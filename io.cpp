@@ -9,6 +9,7 @@ using namespace std;
 const string PROMPT_TEXT = "$ ";
 
 string get_input() {
+  cin.clear();
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
   strcat(cwd, PROMPT_TEXT.c_str());
