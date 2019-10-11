@@ -15,6 +15,7 @@
 #include<vector>
 #include<unistd.h>
 #include<stdlib.h>
+#include<cstring>
 
 using namespace std;
 
@@ -26,7 +27,6 @@ void add_path_variable() {
   path_var.append("/myshell");
   char str[path_var.length()];
   strcpy(str, path_var.c_str());
-  cout << str << endl;
   putenv(str);
 }
 
