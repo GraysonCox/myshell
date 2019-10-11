@@ -27,6 +27,14 @@ class command_t {
   std::vector<std::string> args;
   bool is_built_in = true; // TODO: Encapsulation
 
+
+  //
+  // Constructor that determines whether this command_t is built-in.
+  // If a non-built-in command has a built-in counterpart, this constructor will
+  // change the command's name.
+  //
+  // @param args: A vector containing the command arguments.
+  //
   command_t(std::vector<std::string> args);
 
   //
@@ -49,10 +57,17 @@ class command_t {
  private:
 
   //
-  // This is called by exec() if the command_t is built-in
-  // // TODO:
+  // This is called by exec() if the command_t is built-in.
+  //
+  // The parameters and return value are the same as with exec().
+  //
   int exec_built_in_cmd(int input_fd, int output_fd, int error_fd);
 
+  //
+  // This is called by exec() if the command is not built-in.
+  //
+  // @return 0 if the command executed successfully.
+  //
   int exec_special_cmd();
 
 };

@@ -1,3 +1,15 @@
+/**
+   
+   model.cpp
+
+   This module contains the models command_t and instruction_t. A command_t consists
+   of a single program and its arguments. An instruction_t consists of I/O redirection
+   information, background/foreground execution information, and multiple command_t's
+   (or just one if there are no pipes). Additionally, all instruction/command execution
+   is encapsulated in this module.
+   
+ */
+
 #include"model.h"
 
 #include<unistd.h>
@@ -15,6 +27,13 @@ extern char** environ;
 
 // - command_t
 
+//
+// Constructor that determines whether this command_t is built-in.
+// If a non-built-in command has a built-in counterpart, this constructor will 
+// change the command's name.
+//
+// @param args: A vector containing the command arguments.
+//
 command_t::command_t(vector<string> args) {
   this->args = args;
   string cmd_name = args.front();
@@ -39,6 +58,11 @@ command_t::command_t(vector<string> args) {
   }
 }
 
+//
+// This is called by exec() if the command_t is built-in.
+//
+// The parameters and return value are the same as with exec().
+//
 int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
   pid_t pid;
   if ((pid = fork()) < 0) {
@@ -62,6 +86,11 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
   }
 }
 
+//
+// This is called by exec() if the command is not built-in.
+//
+// @return 0 if the command executed successfully.
+//
 int command_t::exec_special_cmd() {
   string cmd_name = args.at(0);
   if (cmd_name == "cd") {
@@ -91,6 +120,21 @@ int command_t::exec_special_cmd() {
   return 0;
 }
 
+//
+// The command executes itself. If the particular command is built-in, this function 
+// will fork a child process which then calls execvp(). If the command isn't built-in,
+// no child process is forked. This encapsulates all forking at the command level.
+//
+// @Param input_fd: The input file descriptor that will replace stdin within the child
+//                  process. If no input redirection or piping is desired, this should 
+//                  be stdin.
+//       output_fd: The output file descriptor that will replace stdout within the child
+//                  process. If no output redirection or piping is desired, this should 
+//                  be stdout.
+//        error_fd: The file descriptor to replace stderr.
+//
+// @Return 0 if the command executed successfully.
+//
 int command_t::exec(int input_fd, int output_fd, int error_fd) {
   if (is_built_in) {
     return exec_built_in_cmd(input_fd, output_fd, error_fd);
@@ -101,30 +145,48 @@ int command_t::exec(int input_fd, int output_fd, int error_fd) {
 
 // - instruction_t
 
+//
+// This is called by exec() if the instruction_t contains multiple piped
+// command_t's (e.g., "ls -l | sort").
+//
+// @return - 0 if there were no errors.
+//
 int instruction_t::execute_instruction_no_pipes() {
   return cmds.front().exec(0, 1, 2);
 }
 
+//
+// This is called by exec() if the instruction_t contains only one command
+// with no pipes (e.g., "ls -l").
+//
+// @return - 0 if there were no errors.
+//
 int instruction_t::execute_instruction_with_pipes() {
   int fd[2];
-  int fdd = 0; // TODO: Rename this.
+  int fd_buf = 0;
   for (vector<command_t>::iterator cmd_it = cmds.begin(); cmd_it != cmds.end(); cmd_it++) {
     pipe(fd);
     if (cmd_it + 1 != cmds.end()) {
-      cmd_it->exec(fdd, fd[1], fileno(stderr));
+      cmd_it->exec(fd_buf, fd[1], fileno(stderr));
     } else {
-      cmd_it->exec(fdd, 1, fileno(stderr));
+      cmd_it->exec(fd_buf, 1, fileno(stderr));
     }
     close(fd[1]);
-    fdd = fd[0];
-    //close(fd[0]); // TODO: Maybe worry about pipe leaks
+    fd_buf = fd[0];
   }
-  return 0; // TODO: Return -1 if something goes wrong. This always returns 0;
+  return 0;
 }
 
+//
+// This executes the instruction_t, handling pipeing and I/O redirection as
+// needed. If the instruction_t is set to execute in the background, this
+// method will fork a new child process and return immediately.
+//
+// @return - 0 if there were no errors.
+//
 int instruction_t::exec() {
   pid_t pid = -1;
-  if (!is_foreground) {
+  if (!is_foreground) { // If this should be in the background, make a new child process so that the parent can return immediately.
     if ((pid = fork()) < 0) {
       perror("Bad fork");
       return -1;
@@ -132,17 +194,16 @@ int instruction_t::exec() {
       return 0;
     }
   }
-
-  int in, out, save_in, save_out, save_err;
+  int in, out, save_in, save_out, save_err; // File descriptors for I/O redirection
   bool is_output_redirected = !output_file.empty();
   bool is_input_redirected = !input_file.empty();
-  if (is_input_redirected) {
+  if (is_input_redirected) { // Open input file if redirected
     in = open(input_file.c_str(), O_RDONLY);
     if (in == -1) { perror("Failed to open input file"); exit(-1); }
     save_in = dup(fileno(stdin));
     if (dup2(in, fileno(stdin)) == -1) { perror("Failed to redirect stdin."); exit(-1); }
   }
-  if (is_output_redirected) {
+  if (is_output_redirected) { // Open output and error file if redirected
     int write_code = 0;
     switch (write_mode) {
     case WRITE_MODE_TRUNCATE:
@@ -162,18 +223,18 @@ int instruction_t::exec() {
     if (-1 == dup2(out, fileno(stderr))) { perror("Failed to redirect stderr."); exit(-1); }
   }
   int error_code = 0;
-  if (cmds.size() > 1) {
+  if (cmds.size() > 1) { // Execute instruction
     error_code = execute_instruction_with_pipes();
   } else {
     error_code = execute_instruction_no_pipes();
   }
-  if (is_input_redirected) {
+  if (is_input_redirected) { // Close input file if redirected
     fflush(stdin);
     close(in);
     dup2(save_in, fileno(stdin));
     close(save_in);
   }
-  if (is_output_redirected) {
+  if (is_output_redirected) { // Close output file if redirected
     fflush(stdout);
     fflush(stderr);
     close(out);
@@ -182,9 +243,9 @@ int instruction_t::exec() {
     close(save_out);
     close(save_err);
   }
-  if (pid == 0) {
-    exit(error_code);
+  if (pid == 0) { 
+    exit(error_code); // Terminate if this is a child running in the background.
   } else {
-    return 0;
+    return 0; // Return if this is the parent process
   }
 }

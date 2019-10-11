@@ -1,3 +1,12 @@
+/**
+
+   io.h
+
+   This module conatins all the I/O that takes place in main.cpp (i.e., reading user
+   input and parsing batch files).
+
+ */
+
 #pragma once
 #include<iostream>
 #include<fstream>

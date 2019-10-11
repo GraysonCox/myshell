@@ -1,3 +1,13 @@
+/**
+
+   decoder.cpp
+
+   This module handles the decoding of strings and creation of instruction_t and
+   command_t objects. Most of these methods are not specified in decoder.h because
+   they are utility/helper functions.
+
+ */
+
 #include"decoder.h"
 
 #include<vector>
@@ -14,15 +24,15 @@ using namespace std;
 #define SYMBOL_OUT_REDIRECT_TRUNCATE            ">"
 #define SYMBOL_OUT_REDIRECT_APPEND              ">>"
 
-void trim(string str) {
-  while (str.front() == ' ') {
-    str.erase(0);
-  }
-  while (str.back() == ' ') {
-    str.pop_back();
-  }
-}
-
+//
+// Separates a string into substrings delimited by the given delimiter. For example,
+// separate("a;b;c", ";") would return a vector containing "a", "b", and "c".
+//
+// @param - str: The string to be separated.
+//  - delimiter: The string which delimits the border of the substrings to return.
+//
+// @return - A vector containing the substrings
+//
 vector<string> separate(string str, string delimiter) {
   vector<string> substrings;
   char *c_str = new char[str.length()];
@@ -37,19 +47,26 @@ vector<string> separate(string str, string delimiter) {
   return substrings;
 }
 
+//
+// This is called by decode() for every individual instruction. The input to this function
+// should not contain any semi-colons (";"), as that would denote multiple instructions.
+//
+// @param - input: The string containing all arguments for the instruction_t to be returned.
+//
+// @return - The instruction_t that was parsed from the input.
+//
 instruction_t decode_instruction(string input) {
   instruction_t instruction;
   string output_file;
   vector<command_t> cmds;
   vector<string> args;
-
-  
-  vector<string> sep_by_background;// Get background symbol
+  // Get background symbol
+  vector<string> sep_by_background;
   if ((sep_by_background = separate(input, SYMBOL_BACKGROUND)).back() != input) {
     instruction.is_foreground = false;
     input = sep_by_background.front();
   }  
-
+  // Decode commands
   vector<string> command_strings = separate(input, SYMBOL_PIPE);
   for (string cmd_str : command_strings) {
     args = separate(cmd_str, SYMBOL_ARG_DELIMITER);
@@ -75,6 +92,14 @@ instruction_t decode_instruction(string input) {
   return instruction;
 }
 
+//
+// Parses instructions separated by semi-colons (';') in the given string.
+// If there are no semi-colons, the vector will contain just one instruction.
+//
+// @Param - input: the raw text containing command args separated by spaces (' ').
+//
+// @Return - A vector containing the instructions parsed from the string.
+//
 vector<instruction_t> decode(string input) {
   vector<instruction_t> instructions;
   vector<string> instruction_strings = separate(input, SYMBOL_INSTRUCTION_DELIMITER);

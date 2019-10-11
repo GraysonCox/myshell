@@ -19,13 +19,15 @@
 using namespace std;
 
 void add_path_variable() {
-  char path_var[] = "SHELL=";
+  string path_var = "SHELL=";
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
-  strcat(cwd, "/myshell");
-  strcat(path_var, cwd);
-  cout << path_var << endl;
-  putenv(path_var);
+  path_var.append(string(cwd));
+  path_var.append("/myshell");
+  char str[path_var.length()];
+  strcpy(str, path_var.c_str());
+  cout << str << endl;
+  putenv(str);
 }
 
 //
