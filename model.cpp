@@ -23,8 +23,6 @@
 
 using namespace std;
 
-extern char** environ;
-
 // - command_t
 
 //
@@ -42,13 +40,11 @@ command_t::command_t(vector<string> args) {
       || cmd_name == "help"
       || cmd_name == "quit"
       || cmd_name == "pause"
-      || cmd_name == "env"
   ) {
     this->is_built_in = false;
   } else if (cmd_name == "environ") {
     this->args.erase(this->args.begin());
     this->args.emplace(this->args.begin(), "env");
-    this->is_built_in = false;
   } else if (cmd_name == "clr") {
     this->args.erase(this->args.begin());
     this->args.emplace(this->args.begin(), "clear");
@@ -65,6 +61,7 @@ command_t::command_t(vector<string> args) {
 //
 int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
   pid_t pid;
+  string parent_path = getenv("SHELL"); // Gets path to binary file. This will be added to the environment variabls in the child process.
   if ((pid = fork()) < 0) {
     perror("Bad fork");
     return -1;
@@ -74,12 +71,13 @@ int command_t::exec_built_in_cmd(int input_fd, int output_fd, int error_fd) {
     dup2(input_fd, 0);
     dup2(output_fd, 1);
     dup2(error_fd, 2);
-    char *arg_array[args.size() + 1]; // TODO: Make separate method for making this array.
+    char *arg_array[args.size() + 1]; // C string array that can be passed to execvp()
     arg_array[args.size()] = NULL;
     for (size_t i = 0; i < args.size(); i++) {
       arg_array[i] = new char[args.at(i).length() + 1];
       strcpy(arg_array[i], args.at(i).c_str());
     }
+    setenv("PARENT", parent_path.c_str(), 1); // Add PARENT=(path)/myshell to environment variables in child process
     execvp(arg_array[0], arg_array);
     fputs("Invalid instruction.\n", stderr);
     exit(-1);
@@ -112,10 +110,6 @@ int command_t::exec_special_cmd() {
   } else if (cmd_name == "pause") {
     string s;
     getline(cin, s);
-  } else if (cmd_name == "env") {
-    for (size_t i = 0; environ[i] != NULL; i++) {
-      printf("%s\n", environ[i]);
-    }
   }
   return 0;
 }

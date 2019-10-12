@@ -19,15 +19,16 @@
 
 using namespace std;
 
+//
+// Adds SHELL=(directory path)/myshell to the list of environment variables.
+//
 void add_path_variable() {
-  string path_var = "SHELL=";
+  string path_var;
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
   path_var.append(string(cwd));
   path_var.append("/myshell");
-  char str[path_var.length()];
-  strcpy(str, path_var.c_str());
-  putenv(str);
+  setenv("SHELL", path_var.c_str(), 1);
 }
 
 //
